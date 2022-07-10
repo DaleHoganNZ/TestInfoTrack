@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using WebApplication.Infrastructure.Contexts;
 using WebApplication.Infrastructure.Entities;
 using WebApplication.Infrastructure.Interfaces;
@@ -35,7 +35,7 @@ namespace WebApplication.Infrastructure.Services
         /// <inheritdoc />
         public async Task<IEnumerable<User>> FindAsync(string? givenNames, string? lastName, CancellationToken cancellationToken = default)
         {
-            var result = await Task.Run(() => _dbContext.Users.Where(user => user.GivenNames == givenNames || user.LastName == lastName).ToList<User>());
+            var result = await _dbContext.Users.Where(user => user.GivenNames == givenNames || user.LastName == lastName).ToListAsync<User>();
 
             return result;
         }
@@ -43,7 +43,9 @@ namespace WebApplication.Infrastructure.Services
         /// <inheritdoc />
         public async Task<IEnumerable<User>> GetPaginatedAsync(int page, int count, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException("Implement a way to get a 'page' of users.");
+            var total = await _dbContext.Users.CountAsync();
+            var items = await _dbContext.Users.Skip((page - 1) * count).Take(count).ToListAsync();
+            return items;
         }
 
         /// <inheritdoc />
@@ -51,7 +53,7 @@ namespace WebApplication.Infrastructure.Services
         {
             if (_dbContext.Users.Any(u => u.GivenNames == user.GivenNames && u.LastName == user.LastName))
             {
-                throw new Exception("User already exists"); // ToDo: Return not as exception
+                throw new Exception("User already exists");
             }
             else
             {
@@ -78,13 +80,19 @@ namespace WebApplication.Infrastructure.Services
         /// <inheritdoc />
         public async Task<User?> DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException("Implement a way to delete an existing user, including their contact details.");
+            User? userFromDbContext = await _dbContext.Users.Where(user => user.Id == user.Id)
+                                                   .Include(x => x.ContactDetail)
+                                                   .FirstOrDefaultAsync(cancellationToken);
+
+            var result = await Task.Run(() => _dbContext.Users.Remove(userFromDbContext));
+            return result.Entity;
         }
 
         /// <inheritdoc />
         public async Task<int> CountAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException("Implement a way to count the number of users in the database.");
+            var result = await _dbContext.Users.CountAsync();
+            return result;
         }
     }
 }

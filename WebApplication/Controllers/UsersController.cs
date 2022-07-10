@@ -30,11 +30,37 @@ namespace WebApplication.Controllers
         }
 
         // TODO: create a route (at /Find) that can retrieve a list of matching users using the `FindUsersQuery`
+        [HttpGet("find")]
+        public async Task<IActionResult> FindUsers()
+        {
+            var result = await _mediator.Send(new FindUsersQuery());
+            return result.ToActionResult();
+        }
 
         // TODO: create a route (at /List) that can retrieve a paginated list of users using the `ListUsersQuery`
+        [HttpGet("list")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var result = await _mediator.Send(new ListUsersQuery
+            {
+               
+            });
+            return result.ToActionResult();
+        }
 
         // TODO: create a route that can create a user using the `CreateUserCommand`
+        [HttpPost("createnewuser")]
+        public async Task<IActionResult> CreateNewUser()
+        {
+            var commandCreateUser = new CreateUserCommand()
+            {
+          
+            };
 
+            var resultCreateUser = _mediator.Send(commandCreateUser);
+
+            resultCreateUser.Result.ToActionResult();    
+        }
         // TODO: create a route that can update an existing user using the `UpdateUserCommand`
 
         // TODO: create a route that can delete an existing user using the `DeleteUserCommand`
